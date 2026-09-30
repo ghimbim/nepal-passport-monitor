@@ -17,6 +17,7 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ─────────────────────────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ TARGET_OFFICE = "Butwal"
 
 TIME_PATTERN = re.compile(r"\b\d{1,2}:\d{2}(?::\d{2})?\b")
 
+# These are supplied securely by GitHub Actions.
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
@@ -47,7 +49,14 @@ def log(msg):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def send_telegram(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    """
+    Send a message to Telegram using the bot.
+    """
+
+    url = (
+        f"https://api.telegram.org/"
+        f"bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    )
 
     response = requests.post(
         url,
@@ -68,6 +77,7 @@ def send_telegram(message):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def create_driver():
+
     options = webdriver.ChromeOptions()
 
     # GitHub Actions has no visible desktop.
@@ -79,25 +89,29 @@ def create_driver():
 
     options.add_argument("--window-size=1920,1080")
 
-    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument(
+        "--disable-blink-features=AutomationControlled"
+    )
 
-    options.add_argument("--autoplay-policy=no-user-gesture-required")
+    options.add_argument(
+        "--autoplay-policy=no-user-gesture-required"
+    )
 
     options.add_experimental_option(
         "excludeSwitches",
-        ["enable-automation"]
+        ["enable-automation"],
     )
 
     options.add_experimental_option(
         "useAutomationExtension",
-        False
+        False,
     )
 
     options.add_experimental_option(
         "prefs",
         {
             "profile.default_content_setting_values.sound": 1,
-        }
+        },
     )
 
     driver = webdriver.Chrome(options=options)
@@ -110,10 +124,14 @@ def create_driver():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def pick_dropdown(driver, wait, dropdown_id, option_text):
-    """Open a PrimeReact dropdown and select the requested option."""
+    """
+    Open a PrimeReact dropdown and select the requested option.
+    """
 
     dropdown = wait.until(
-        EC.element_to_be_clickable((By.ID, dropdown_id))
+        EC.element_to_be_clickable(
+            (By.ID, dropdown_id)
+        )
     )
 
     driver.execute_script(
@@ -161,7 +179,10 @@ def navigate_to_calendar(driver, wait):
 
     time.sleep(3)
 
+    # ────────────────────────────────────────────────────────────────────────
     # Apply without account
+    # ────────────────────────────────────────────────────────────────────────
+
     log("Clicking 'Apply without an account'...")
 
     button = wait.until(
@@ -183,12 +204,18 @@ def navigate_to_calendar(driver, wait):
 
     time.sleep(1.5)
 
+    # ────────────────────────────────────────────────────────────────────────
     # Confirmation dialog
+    # ────────────────────────────────────────────────────────────────────────
+
     log("Confirming dialog...")
 
     continue_button = wait.until(
         EC.element_to_be_clickable(
-            (By.CSS_SELECTOR, "button.account-dialog-continue-btn")
+            (
+                By.CSS_SELECTOR,
+                "button.account-dialog-continue-btn",
+            )
         )
     )
 
@@ -196,7 +223,10 @@ def navigate_to_calendar(driver, wait):
 
     time.sleep(2.5)
 
+    # ────────────────────────────────────────────────────────────────────────
     # First issuance
+    # ────────────────────────────────────────────────────────────────────────
+
     log("Selecting 'First issuance (New)'...")
 
     cards = wait.until(
@@ -209,7 +239,10 @@ def navigate_to_calendar(driver, wait):
 
     time.sleep(2)
 
+    # ────────────────────────────────────────────────────────────────────────
     # Ordinary 34 pages
+    # ────────────────────────────────────────────────────────────────────────
+
     log("Selecting 'Ordinary 34 pages'...")
 
     option_34 = wait.until(
@@ -225,7 +258,10 @@ def navigate_to_calendar(driver, wait):
 
     time.sleep(1)
 
+    # ────────────────────────────────────────────────────────────────────────
     # Next
+    # ────────────────────────────────────────────────────────────────────────
+
     log("Clicking Next...")
 
     next_button = wait.until(
@@ -242,7 +278,10 @@ def navigate_to_calendar(driver, wait):
 
     time.sleep(1.5)
 
+    # ────────────────────────────────────────────────────────────────────────
     # Agree
+    # ────────────────────────────────────────────────────────────────────────
+
     log("Accepting terms...")
 
     agree_button = wait.until(
@@ -255,7 +294,10 @@ def navigate_to_calendar(driver, wait):
 
     time.sleep(2.5)
 
+    # ────────────────────────────────────────────────────────────────────────
     # Location
+    # ────────────────────────────────────────────────────────────────────────
+
     log(
         f"Selecting location: "
         f"{TARGET_PROVINCE} > "
@@ -284,7 +326,10 @@ def navigate_to_calendar(driver, wait):
         TARGET_OFFICE,
     )
 
+    # ────────────────────────────────────────────────────────────────────────
     # Calendar
+    # ────────────────────────────────────────────────────────────────────────
+
     log("Proceeding to calendar...")
 
     location_next = wait.until(
@@ -320,11 +365,13 @@ def navigate_to_calendar(driver, wait):
 def element_key(driver, element):
 
     try:
+
         return driver.execute_script(
             """
             var e = arguments[0], path = [];
 
             while (e.parentNode) {
+
                 path.unshift(
                     Array.prototype.indexOf.call(
                         e.parentNode.children,
@@ -341,7 +388,11 @@ def element_key(driver, element):
         )
 
     except Exception:
-        return element.id
+
+        try:
+            return element.id
+        except Exception:
+            return None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -397,9 +448,12 @@ def get_calendar_dates(driver):
                 if aria_disabled == "true":
                     continue
 
-                key = element_key(driver, element)
+                key = element_key(
+                    driver,
+                    element,
+                )
 
-                if key not in seen:
+                if key is not None and key not in seen:
 
                     seen.add(key)
                     result.append(element)
@@ -431,9 +485,12 @@ def get_calendar_dates(driver):
                 if not element.is_displayed():
                     continue
 
-                key = element_key(driver, element)
+                key = element_key(
+                    driver,
+                    element,
+                )
 
-                if key not in seen:
+                if key is not None and key not in seen:
 
                     seen.add(key)
                     result.append(element)
@@ -504,7 +561,9 @@ def get_time_slots(driver):
             ]
 
             return " ".join(
-                value for value in values if value
+                value
+                for value in values
+                if value
             ).strip()
 
         except Exception:
@@ -560,9 +619,12 @@ def get_time_slots(driver):
                 if not has_clock_time(element):
                     continue
 
-                key = element_key(driver, element)
+                key = element_key(
+                    driver,
+                    element,
+                )
 
-                if key not in seen:
+                if key is not None and key not in seen:
 
                     seen.add(key)
                     result.append(element)
@@ -657,6 +719,7 @@ def check_calendar_for_slots(driver):
             time.sleep(0.3)
 
             try:
+
                 element.click()
 
             except Exception:
@@ -683,7 +746,9 @@ def check_calendar_for_slots(driver):
 
                 time.sleep(0.8)
 
-                confirmed_slots = get_time_slots(driver)
+                confirmed_slots = get_time_slots(
+                    driver
+                )
 
                 if not confirmed_slots:
                     continue
@@ -705,7 +770,9 @@ def check_calendar_for_slots(driver):
 
                 return True, detail
 
-            no_slot = page_says_no_slots(driver)
+            no_slot = page_says_no_slots(
+                driver
+            )
 
             log(
                 f"Date '{label}': "
@@ -739,11 +806,13 @@ def main():
 
     log("=" * 65)
     log("Nepal Passport Appointment Monitor")
+
     log(
         f"Target: {TARGET_PROVINCE} > "
         f"{TARGET_DISTRICT} > "
         f"{TARGET_OFFICE}"
     )
+
     log("=" * 65)
 
     driver = None
@@ -757,14 +826,20 @@ def main():
             30,
         )
 
+        # Navigate through the complete application flow.
         navigate_to_calendar(
             driver,
             wait,
         )
 
+        # Check the calendar.
         found, details = check_calendar_for_slots(
             driver
         )
+
+        # ────────────────────────────────────────────────────────────────────
+        # SLOT FOUND
+        # ────────────────────────────────────────────────────────────────────
 
         if found:
 
@@ -778,35 +853,64 @@ def main():
                 f"District: {TARGET_DISTRICT}\n"
                 f"Office: {TARGET_OFFICE}\n\n"
                 f"{details}\n\n"
-                f"Open the Nepal Passport portal immediately:\n"
+                "Open the Nepal Passport portal immediately:\n"
                 f"{PORTAL_URL}"
             )
 
             send_telegram(message)
+
+        # ────────────────────────────────────────────────────────────────────
+        # NO SLOT FOUND
+        # ────────────────────────────────────────────────────────────────────
 
         else:
 
             log("No appointment slot available.")
             log(details)
 
+            message = (
+                "🤖 Hello! Just checking.\n\n"
+                "The Nepal passport automation ran successfully.\n\n"
+                f"Target:\n"
+                f"{TARGET_PROVINCE} → "
+                f"{TARGET_DISTRICT} → "
+                f"{TARGET_OFFICE}\n\n"
+                f"Result:\n{details}"
+            )
+
+            send_telegram(message)
+
+    # ────────────────────────────────────────────────────────────────────────
+    # AUTOMATION ERROR
+    # ────────────────────────────────────────────────────────────────────────
+
     except Exception as error:
 
         log(f"ERROR: {error}")
 
-        # Notify us about unexpected failures too.
         try:
 
-            send_telegram(
+            error_message = (
                 "⚠️ Nepal Passport monitor encountered an error.\n\n"
-                f"{error}"
+                f"Target: "
+                f"{TARGET_PROVINCE} → "
+                f"{TARGET_DISTRICT} → "
+                f"{TARGET_OFFICE}\n\n"
+                f"Error:\n{error}"
             )
 
-        except Exception:
+            send_telegram(
+                error_message
+            )
+
+        except Exception as telegram_error:
 
             log(
-                "Could not send Telegram error notification."
+                "Could not send Telegram error notification: "
+                f"{telegram_error}"
             )
 
+        # Make GitHub mark the workflow as failed.
         raise
 
     finally:
@@ -821,6 +925,10 @@ def main():
 
     log("Check complete.")
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# START
+# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     main()
