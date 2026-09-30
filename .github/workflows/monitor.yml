@@ -1,16 +1,12 @@
 name: Nepal Passport Monitor
-
 on:
   schedule:
-    - cron: "3,33 * * * *"
-      timezone: "Asia/Kathmandu"
-
+    - cron: "18,48 * * * *" # 03/33 Nepal time; cron is UTC
   workflow_dispatch:
 
 jobs:
   check:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -34,5 +30,4 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          python passport_monitor.py
+        run: python passport_monitor.py
