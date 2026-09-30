@@ -1,9 +1,15 @@
-
-name: Nepal Passport Slot Monitor
+name: Nepal Passport Monitor
 
 on:
   schedule:
+    # Passport check - every 30 minutes
     - cron: "*/30 * * * *"
+
+    # Good morning - 6:00 AM Nepal time (00:15 UTC)
+    - cron: "15 0 * * *"
+
+    # Good night - 9:00 PM Nepal time (15:15 UTC)
+    - cron: "34 13 * * *"
 
   workflow_dispatch:
 
@@ -30,7 +36,40 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Determine task
+        id: task
+        run: |
+          HOUR=$(date -u +%H)
+          MINUTE=$(date -u +%M)
+
+          if [ "$HOUR" = "00" ] && [ "$MINUTE" = "15" ]; then
+            echo "task=morning" >> "$GITHUB_OUTPUT"
+
+          elif [ "$HOUR" = "15" ] && [ "$MINUTE" = "15" ]; then
+            echo "task=night" >> "$GITHUB_OUTPUT"
+
+          else
+            echo "task=monitor" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Good morning
+        if: steps.task.outputs.task == 'morning'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "import os, requests; requests.post(f'https://api.telegram.org/bot{os.environ[\"TELEGRAM_BOT_TOKEN\"]}/sendMessage', data={'chat_id': os.environ['TELEGRAM_CHAT_ID'], 'text': '🌅 Good morning! Have a great day!'}, timeout=20).raise_for_status()"
+
+      - name: Good night
+        if: steps.task.outputs.task == 'night'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "import os, requests; requests.post(f'https://api.telegram.org/bot{os.environ[\"TELEGRAM_BOT_TOKEN\"]}/sendMessage', data={'chat_id': os.environ['TELEGRAM_CHAT_ID'], 'text': '🌙 Good night! Sleep well!'}, timeout=20).raise_for_status()"
+
       - name: Run passport monitor
+        if: steps.task.outputs.task == 'monitor'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
