@@ -2,7 +2,8 @@ name: Nepal Passport Monitor
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "3,33 * * * *"
+      timezone: "Asia/Kathmandu"
 
   workflow_dispatch:
 
