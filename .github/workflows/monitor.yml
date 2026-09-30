@@ -9,7 +9,7 @@ on:
     - cron: "15 0 * * *"
 
     # Good night - 9:00 PM Nepal time (15:15 UTC)
-    - cron: "34 13 * * *"
+    - cron: "50 1 * * *"
 
   workflow_dispatch:
 
